@@ -20,7 +20,8 @@ This project is a user-friendly, and responsive web application that allows user
 
 ## TODO
 
-- [ ] Setup project
+- [x] github repo
+- [x] Setup project
 - [ ] Upload PDF
 - [ ] Display PDF
 - [ ] Text-to-Speech
