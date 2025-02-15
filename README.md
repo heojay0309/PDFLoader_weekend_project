@@ -8,6 +8,7 @@ This project is a user-friendly, and responsive web application that allows user
 
 - Next.js
 - Tailwind CSS
+- Shadcn UI
 - PlayAI Agent API
 
 ## Technical Requirements
@@ -22,7 +23,7 @@ This project is a user-friendly, and responsive web application that allows user
 
 - [x] github repo
 - [x] Setup project
-- [ ] Upload PDF
+- [x] Upload PDF
 - [ ] Display PDF
 - [ ] Text-to-Speech
 - [ ] PlayAI Integration
