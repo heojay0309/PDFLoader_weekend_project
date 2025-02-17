@@ -8,22 +8,38 @@ This project is a user-friendly, and responsive web application that allows user
 
 - Next.js
 - Tailwind CSS
+- Shadcn UI
 - PlayAI Agent API
+- Supabase Storage
+- Prisma
+- Lucide Icons
+- PDF.js
 
-## Technical Requirements
+## Technical Features
 
 - PDF Upload
 - Page Display
 - Text-to-Speech
 - PlayAI Integration
-- Interactive Chat with the book
+
+## Quick Start
+
+1. Clone the repository
+2. Edit the `.env` file with your own values (see `env.example`)
+3. Run `npm install`
+4. Run `npm run dev`
 
 ## TODO
 
+- [ ] Interactive Chat with the book
+
+## Completed
+
 - [x] github repo
 - [x] Setup project
-- [ ] Upload PDF
-- [ ] Display PDF
-- [ ] Text-to-Speech
-- [ ] PlayAI Integration
-- [ ] Interactive Chat with the book
+- [x] Setup DB (prisma)
+- [x] Setup Supabase Storage
+- [x] Upload PDF
+- [x] Display PDF
+- [x] Text-to-Speech
+- [x] PlayAI Integration
