@@ -1,33 +1,36 @@
-'use client';
-import { Play, Pause } from 'lucide-react';
-import { Button } from './ui/button';
-import { useEffect, useState } from 'react';
-import { useRef } from 'react';
-import { Progress } from './ui/progress';
-import { useUploadedFiles } from '@/context/UploadedFilesContext';
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { Play, Pause, Eye, X } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+
 const speedOptions = [1, 1.5, 2, 2.5, 3, 3.5, 4];
-const AudioController = ({ file }: { file: string }) => {
+
+const AudioController = ({
+  fileAudio,
+  fileName,
+}: {
+  fileAudio: string;
+  fileName: string;
+}) => {
+  const [isOpen, setIsOpen] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [speed, setSpeed] = useState(0);
-  const { pdfUrl } = useUploadedFiles();
 
   useEffect(() => {
-    if (file) {
+    const audioMount = async () => {
       if (audioRef.current) {
-        const fileUrl = pdfUrl.find((url) => url.name === file)?.url;
-
-        // audioRef.current.src = data.url;
-        audioRef.current.src = fileUrl?.ttsUrl || '';
-        // audioRef.current.src =
-        //   'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-
-        // audioRef.current.play();
-        // setIsPlaying(true);
+        audioRef.current.src = fileAudio;
       }
+    };
+    if (fileAudio) {
+      audioMount();
     }
-  }, [file]);
+  }, [fileAudio]);
 
   const handlePlayPause = async () => {
     if (isPlaying) {
@@ -37,27 +40,12 @@ const AudioController = ({ file }: { file: string }) => {
     }
 
     try {
-      // const response = await fetch('/api/tts', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ text: currentText }),
-      // });
-
-      // if (!response.ok) throw new Error('TTS request failed');
-
-      // const data = await response.json();
-
       if (audioRef.current) {
-        // audioRef.current.src = data.url;
-        // audioRef.current.src =
-        //   'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-
         audioRef.current.play();
         setIsPlaying(true);
       }
     } catch (error) {
-      console.error('Error generating speech:', error);
-      // toast.error('Failed to generate speech');
+      console.error("Error generating speech:", error);
     }
   };
 
@@ -65,9 +53,8 @@ const AudioController = ({ file }: { file: string }) => {
     setSpeed((prevSpeed) => {
       const newSpeed = prevSpeed + 1 >= speedOptions.length ? 0 : prevSpeed + 1;
 
-      // Update the audio playback speed
       if (audioRef.current) {
-        audioRef.current.playbackRate = speedOptions[newSpeed] ?? 1; // Ensure a valid speed
+        audioRef.current.playbackRate = speedOptions[newSpeed] ?? 1;
       }
 
       return newSpeed;
@@ -75,34 +62,35 @@ const AudioController = ({ file }: { file: string }) => {
   };
 
   const formatTime = (seconds: number) => {
+    if (isNaN(seconds)) return "0:00";
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
+  };
+
+  const handleHide = () => {
+    setIsOpen(!isOpen);
   };
 
   return (
     <div
-      className={`fixed w-full left-0 bottom-0 duration-300 transition-all p-8 ${
-        file ? 'opacity-100' : 'opacity-0  pointer-events-none'
+      className={`absolute bottom-0 left-0 w-full p-8 transition-all duration-300 ${
+        fileAudio ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >
-      {file && (
-        <div className="border  justify-between flex-col-reverse md:flex-row flex rounded-2xl border-white/10 p-4 bg-[#111111]">
-          <div className="md:p-4 rounded-lg w-full md:w-[20%]">
+      {fileAudio && isOpen ? (
+        <div className="flex flex-col-reverse justify-between rounded-2xl border border-white/10 bg-[#111111] bg-opacity-80 p-4 md:flex-row">
+          <div className="w-full rounded-lg md:w-[20%] md:p-4">
             <div className="max-h-60">
-              {' '}
-              <p className="truncate w-[60%] md:w-full">{file}</p>
+              <p className="w-[60%] truncate md:w-full">{fileName}</p>
               <p className="text-sm">
-                {formatTime(audioRef.current?.currentTime || 0)} /{' '}
+                {formatTime(audioRef.current?.currentTime || 0)} /{" "}
                 {formatTime(audioRef.current?.duration || 0)}
               </p>
             </div>
           </div>
-          <div className="max-w-[100%] md:max-w-[60%] h-[40px] md:h-auto w-full relative flex items-center justify-center">
-            <Progress
-              value={progress}
-              className="max-w-[100%] md:max-w-[60%] w-full"
-            />
+          <div className="relative flex h-[40px] w-full max-w-[100%] items-center justify-center md:h-auto md:max-w-[60%]">
+            <Progress value={progress} />
             <input
               type="range"
               min="0"
@@ -116,14 +104,21 @@ const AudioController = ({ file }: { file: string }) => {
                   audioRef.current.currentTime = newTime;
                 }
               }}
-              className="w-full max-w-[100%] md:max-w-[61%] absolute"
+              className="absolute w-full"
             />
           </div>
-          <div className="flex items-center md:justify-between gap-8 justify-center md:max-w-[20%]  w-full">
+          <div className="flex items-center justify-center gap-4 lg:gap-8">
+            <Button
+              onClick={handleSpeedChange}
+              variant="ghost"
+              className="h-12 w-12 rounded-full"
+            >
+              {speedOptions[speed]}x
+            </Button>
             <Button
               onClick={handlePlayPause}
               variant="outline"
-              className="flex items-center h-12 w-12 rounded-full bg-white hover:bg-[#b4fd83]"
+              className="flex h-12 w-12 items-center rounded-full bg-white hover:bg-[#b4fd83]"
             >
               {isPlaying ? (
                 <Pause className="h-[40px] w-[40px] text-black" fill="black" />
@@ -132,11 +127,11 @@ const AudioController = ({ file }: { file: string }) => {
               )}
             </Button>
             <Button
-              onClick={handleSpeedChange}
+              onClick={handleHide}
               variant="ghost"
               className="h-12 w-12 rounded-full"
             >
-              {speedOptions[speed]}x
+              <X className="h-[40px] w-[40px] text-white" fill="white" />
             </Button>
           </div>
 
@@ -150,8 +145,21 @@ const AudioController = ({ file }: { file: string }) => {
               setIsPlaying(false);
               setProgress(0);
             }}
+            onLoadedMetadata={() => {
+              setProgress(0);
+            }}
             className="hidden"
           />
+        </div>
+      ) : (
+        <div className="h-[64px] w-[64px]">
+          <Button
+            onClick={handleHide}
+            variant="ghost"
+            className="h-12 w-12 rounded-full bg-white/10"
+          >
+            <Eye className="h-[40px] w-[40px] text-white" />
+          </Button>
         </div>
       )}
     </div>

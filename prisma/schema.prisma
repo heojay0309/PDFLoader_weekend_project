@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+model FileAudio {
+  id           String       @id @default(cuid())
+  url          String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  status       String
+  uploadedFile UploadedFile?
+}
+
+model UploadedFile {
+  id          String     @id @default(cuid())
+  name        String
+  url         String
+  fileAudioId String    @unique
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  fileAudio   FileAudio @relation(fields: [fileAudioId], references: [id])
+}
