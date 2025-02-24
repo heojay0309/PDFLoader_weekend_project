@@ -18,7 +18,7 @@ model FileAudio {
 
 model UploadedFile {
   id          String     @id @default(cuid())
-  name        String
+  name        String  
   url         String
   fileAudioId String    @unique
   createdAt   DateTime   @default(now())

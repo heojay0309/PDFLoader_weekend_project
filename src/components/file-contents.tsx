@@ -19,13 +19,6 @@ const FileContent = () => {
       <div className="relative flex max-h-full min-h-[320px] w-full max-w-[1/2] flex-col justify-between gap-4 rounded-2xl border border-white/10 p-4">
         <h4 className="">YOUR PLAYNOTES</h4>
         <div className="flex h-full flex-1 flex-col gap-4 overflow-y-auto">
-          {isLoading ? (
-            <div className="flex min-h-[64px] w-full flex-col items-center justify-between gap-2 rounded-2xl border border-white/10 bg-[#191919] p-4 text-white hover:border-primary/60 hover:bg-[#191919] active:border-primary/80 active:bg-[#191919]">
-              <h4>Loading...</h4>
-            </div>
-          ) : (
-            <></>
-          )}
           {uploadedFiles.map((file, index) => {
             return (
               <div
@@ -68,6 +61,13 @@ const FileContent = () => {
               </div>
             );
           })}
+          {isLoading ? (
+            <div className="flex min-h-[64px] w-full flex-col items-center justify-between gap-2 rounded-2xl border border-white/10 bg-[#191919] p-4 text-white hover:border-primary/60 hover:bg-[#191919] active:border-primary/80 active:bg-[#191919]">
+              <h4>Loading...</h4>
+            </div>
+          ) : (
+            <></>
+          )}
         </div>
       </div>
     </div>

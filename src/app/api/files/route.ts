@@ -66,17 +66,33 @@ export async function POST(request: Request) {
         const text = texts[index];
         // then convert the text to speech
         const ttsResponse = await convertTextToSpeech(text as string);
-
+        if (!ttsResponse) {
+          return NextResponse.json(
+            { error: `Unable to process TTS for file: ${file.name}` },
+            { status: 400 },
+          );
+        }
         const filePath = `pdfs/${file.name}`;
+
+        // Check if file already exists in the uploadedFile table
+        const existingFile = await prisma.uploadedFile.findFirst({
+          where: { name: (file as File).name as string },
+        });
+
+        if (existingFile) {
+          console.log(`File with name ${file.name} already exists.`);
+          return existingFile;
+        }
+
         // Upload to Supabase Storage
         const { data, error } = await supabase.storage
           .from("pdf-files")
           .upload(filePath, file);
+
         if (error) {
           console.log("error", error);
           throw new Error(`Upload failed: ${error.message}`);
         }
-
         // then create the file audio
         const fileAudio = await prisma.fileAudio.create({
           data: {
@@ -90,7 +106,6 @@ export async function POST(request: Request) {
         const { data: publicUrl } = supabase.storage
           .from("pdf-files")
           .getPublicUrl(filePath);
-        console.log("publicUrl", publicUrl);
 
         return prisma.uploadedFile.create({
           data: {
@@ -125,7 +140,7 @@ const convertTextToSpeech = async (text: string): Promise<any> => {
         "X-User-ID": process.env.PLAYAI_USER_ID || "",
       },
       body: JSON.stringify({
-        model: "Play3.0-mini",
+        model: "PlayDialog",
         text: text,
         voice:
           "s3://voice-cloning-zero-shot/baf1ef41-36b6-428c-9bdf-50ba54682bd8/original/manifest.json",
