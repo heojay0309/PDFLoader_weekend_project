@@ -10,6 +10,7 @@ interface FileResponse {
     url: string;
     status: string;
   };
+  isLoading: boolean;
 }
 
 export function useFiles() {
@@ -33,7 +34,7 @@ export function useUploadFile() {
       const formData = new FormData();
       files.forEach((file) => {
         formData.append("files", file.file);
-        formData.append("text", file.text);
+        formData.append("text", file.text[0]);
       });
 
       const response = await fetch("/api/files", {
@@ -44,7 +45,6 @@ export function useUploadFile() {
       if (!response.ok) {
         throw new Error("Upload failed");
       }
-
       return response.json();
     },
     onSuccess: () => {

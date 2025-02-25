@@ -11,8 +11,8 @@ const SidebarContentMobile = ({
   pathname: string;
   handleToggle: () => void;
 }) => {
-  const currentPath = pathname;
   const { uploadedFiles } = useUploadedFiles();
+  const currentPath = pathname;
 
   return (
     <div className="flex h-full w-full flex-col gap-8 p-[32px]">
@@ -29,9 +29,9 @@ const SidebarContentMobile = ({
         <h3 className="select-none text-white text-opacity-60">
           Uploaded Files
         </h3>
-        <div className="flex flex-col gap-2 overflow-y-auto pl-2">
-          {uploadedFiles.map((file) => {
-            if (!file.id) return null;
+        <div className="flex flex-col gap-4 overflow-y-auto pl-2">
+          {uploadedFiles.map((file, index) => {
+            if (!file || !file.id) return null;
 
             return (
               <Link

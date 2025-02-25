@@ -38,10 +38,11 @@ export async function GET() {
               ...file,
               status: updatedFileAudio.status,
               url: updatedFileAudio.url,
+              isLoading: false,
             };
           }
         } else {
-          return file;
+          return { ...file, isLoading: false };
         }
       }),
     );
@@ -63,17 +64,6 @@ export async function POST(request: Request) {
 
     const savedFiles = await Promise.all(
       files.map(async (file: any, index: number) => {
-        const text = texts[index];
-        // then convert the text to speech
-        const ttsResponse = await convertTextToSpeech(text as string);
-        if (!ttsResponse) {
-          return NextResponse.json(
-            { error: `Unable to process TTS for file: ${file.name}` },
-            { status: 400 },
-          );
-        }
-        const filePath = `pdfs/${file.name}`;
-
         // Check if file already exists in the uploadedFile table
         const existingFile = await prisma.uploadedFile.findFirst({
           where: { name: (file as File).name as string },
@@ -84,6 +74,18 @@ export async function POST(request: Request) {
           return existingFile;
         }
 
+        const text = texts[index];
+
+        // then convert the text to speech
+        const ttsResponse = await convertTextToSpeech(text as string);
+        if (!ttsResponse) {
+          return NextResponse.json(
+            { error: `Unable to process TTS for file: ${file.name}` },
+            { status: 400 },
+          );
+        }
+
+        const filePath = `pdfs/${ttsResponse.id}`;
         // Upload to Supabase Storage
         const { data, error } = await supabase.storage
           .from("pdf-files")
@@ -91,8 +93,9 @@ export async function POST(request: Request) {
 
         if (error) {
           console.log("error", error);
-          throw new Error(`Upload failed: ${error.message}`);
+          return error;
         }
+
         // then create the file audio
         const fileAudio = await prisma.fileAudio.create({
           data: {
@@ -107,7 +110,7 @@ export async function POST(request: Request) {
           .from("pdf-files")
           .getPublicUrl(filePath);
 
-        return prisma.uploadedFile.create({
+        return await prisma.uploadedFile.create({
           data: {
             name: (file as File).name,
             url: publicUrl.publicUrl || "",
@@ -122,7 +125,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(savedFiles);
   } catch (error) {
-    console.log("error", error);
     return NextResponse.json(
       { error: "Failed to upload files" },
       { status: 500 },
@@ -132,6 +134,13 @@ export async function POST(request: Request) {
 
 const convertTextToSpeech = async (text: string): Promise<any> => {
   try {
+    const payload = {
+      model: "PlayDialog",
+      text: text,
+      voice:
+        "s3://voice-cloning-zero-shot/baf1ef41-36b6-428c-9bdf-50ba54682bd8/original/manifest.json",
+    };
+
     const response = await fetch("https://api.play.ai/api/v1/tts", {
       method: "POST",
       headers: {
@@ -139,13 +148,9 @@ const convertTextToSpeech = async (text: string): Promise<any> => {
         "Content-Type": "application/json",
         "X-User-ID": process.env.PLAYAI_USER_ID || "",
       },
-      body: JSON.stringify({
-        model: "PlayDialog",
-        text: text,
-        voice:
-          "s3://voice-cloning-zero-shot/baf1ef41-36b6-428c-9bdf-50ba54682bd8/original/manifest.json",
-      }),
+      body: JSON.stringify(payload),
     });
+
     if (!response.ok) {
       console.log("response", response);
       return null;
