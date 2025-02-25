@@ -33,17 +33,15 @@ const AudioController = ({
   }, [fileAudio]);
 
   const handlePlayPause = async () => {
-    if (isPlaying) {
-      audioRef.current?.pause();
-      setIsPlaying(false);
-      return;
-    }
+    if (!audioRef.current) return;
 
     try {
-      if (audioRef.current) {
-        audioRef.current.play();
-        setIsPlaying(true);
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        await audioRef.current.play();
       }
+      setIsPlaying(!isPlaying);
     } catch (error) {
       console.error("Error generating speech:", error);
     }
@@ -69,7 +67,16 @@ const AudioController = ({
   };
 
   const handleHide = () => {
-    setIsOpen(!isOpen);
+    setIsOpen((prev) => {
+      const newState = !prev;
+
+      if (!newState && audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
+
+      return newState;
+    });
   };
 
   return (
@@ -78,8 +85,10 @@ const AudioController = ({
         fileAudio ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >
-      {fileAudio && isOpen ? (
-        <div className="flex flex-col-reverse justify-between rounded-2xl border border-white/10 bg-[#111111] bg-opacity-80 p-4 md:flex-row">
+      {fileAudio && (
+        <div
+          className={`flex flex-col-reverse justify-between rounded-2xl border border-white/10 bg-[#111111] bg-opacity-80 p-4 md:flex-row ${isOpen ? "visible" : "invisible"}`}
+        >
           <div className="w-full rounded-lg md:w-[20%] md:p-4">
             <div className="max-h-60">
               <p className="w-[60%] truncate md:w-full">{fileName}</p>
@@ -95,7 +104,7 @@ const AudioController = ({
               type="range"
               min="0"
               max="100"
-              value={progress}
+              value={isNaN(progress) ? 0 : progress}
               onChange={(e) => {
                 const newTime =
                   (parseFloat(e.target.value) / 100) *
@@ -139,9 +148,13 @@ const AudioController = ({
             ref={audioRef}
             onTimeUpdate={(e) => {
               const audio = e.currentTarget;
+              if (!audio.duration || isNaN(audio.duration)) return;
               setProgress((audio.currentTime / audio.duration) * 100);
             }}
             onEnded={() => {
+              if (audioRef.current) {
+                audioRef.current.currentTime = 0;
+              }
               setIsPlaying(false);
               setProgress(0);
             }}
@@ -150,16 +163,17 @@ const AudioController = ({
             }}
             className="hidden"
           />
-        </div>
-      ) : (
-        <div className="h-[64px] w-[64px]">
-          <Button
-            onClick={handleHide}
-            variant="ghost"
-            className="h-12 w-12 rounded-full bg-white/10"
+          <div
+            className={`h-[64px] w-[64px] ${isOpen ? "invisible" : "visible"}`}
           >
-            <Eye className="h-[40px] w-[40px] text-white" />
-          </Button>
+            <Button
+              onClick={handleHide}
+              variant="ghost"
+              className="h-12 w-12 rounded-full bg-white/10"
+            >
+              <Eye className="h-[40px] w-[40px] text-white" />
+            </Button>
+          </div>
         </div>
       )}
     </div>
